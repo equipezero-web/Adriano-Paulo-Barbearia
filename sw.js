@@ -1,28 +1,32 @@
-const CACHE_NAME = 'barbearia-cache-v2';
-const ASSETS_TO_CACHE = [
+// Nome do cache
+const CACHE_NAME = 'barbearia-v1';
+
+// Arquivos para guardar no cache do celular
+const ASSETS = [
   './',
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  './logo.png'
 ];
 
-// Instalação do Service Worker e salvamento dos arquivos básicos
-self.addEventListener('install', (event) => {
-  event.waitUntil(
+// Instalação do Service Worker
+self.addEventListener('install', (e) => {
+  e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      return cache.addAll(ASSETS);
     })
   );
   self.skipWaiting();
 });
 
-// Ativação e remoção de caches antigos (como o v1)
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
+// Ativação do Service Worker
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
           }
         })
       );
@@ -31,23 +35,11 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Estratégia de busca: Tenta a rede primeiro; se estiver offline, busca no cache
-self.addEventListener('fetch', (event) => {
-  // Não intercepta chamadas para o Google Apps Script nem WhatsApp
-  if (event.request.url.includes('script.google.com') || event.request.url.includes('wa.me')) {
-    return;
-  }
-
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // Atualiza o cache dinamicamente com a versão da rede
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseClone);
-        });
-        return response;
-      })
-      .catch(() => caches.match(event.request))
+// Interceptação de requisições
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    caches.match(e.request).then((response) => {
+      return response || fetch(e.request);
+    })
   );
 });
