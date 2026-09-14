@@ -3,8 +3,9 @@
   "short_name": "AP Barbearia",
   "start_url": "./index.html",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#000000",
-  "theme_color": "#D4AF37",
+  "theme_color": "#000000",
   "icons": [
     {
       "src": "./logo.png",
