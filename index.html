@@ -122,10 +122,10 @@ hr,.divider{border-color:rgba(31,77,121,.36)!important}
 </style></head>
 <body>
 <section id="landing"><div class="landing-card"><img class="logo" src="logo.png" alt="Adriano Paulo Barbearia"><h1>ADRIANO PAULO</h1><div class="smoke"><div id="smokeText">Precisão, estilo e cuidado em cada detalhe.</div></div><div class="landing-actions"><button class="primary" onclick="openLogin()">Entrar</button><button class="ghost" onclick="openRegister()">Criar conta</button></div><p class="muted">Agendamento • atendimento premium</p></div></section>
-<div id="authModal" class="modal hidden"><div class="auth"><button class="ghost" style="float:right;padding:7px 11px" onclick="closeAuth()">×</button><img class="logo" style="width:72px;height:72px" src="logo.png"><div id="loginBox"><h2>Bem-vindo à JM</h2><p class="muted">Entre para agendar seu próximo atendimento.</p><div class="grid"><div class="field"><label>Usuário</label><input id="loginUser" type="text" placeholder="Digite seu usuário"></div><div class="field"><label>Senha</label><input id="loginPass" type="password" placeholder="••••••••"></div><button class="primary" onclick="login()">Entrar</button></div><div class="auth-foot muted">Ainda não possui conta? <span class="link" onclick="openRegister()">Cadastre-se</span></div></div>
-<div id="registerBox" class="hidden"><h2>Criar conta</h2><p class="muted">Preencha seus dados para continuar.</p><div class="grid"><div class="field"><label>Nome completo</label><input id="regName"></div><div class="field"><label>Usuário</label><input id="regEmail" type="email"></div><div class="field"><label>Telefone</label><input id="regPhone" inputmode="tel"></div><div class="field"><label>Data de nascimento</label><input id="regBirth" type="date"></div><div class="field"><label>Como conheceu a barbearia?</label><select id="regSource"><option value="">Selecione</option><option>Cortesia</option><option>Eventos</option><option>Facebook</option><option>Fachada da loja</option><option>Google</option><option>Indicação</option><option>Instagram</option><option>Panfleto</option><option>Site</option></select></div><div class="field"><label>Crie uma senha</label><input id="regPass" type="password"></div><button class="primary" onclick="register()">Concluir cadastro</button></div><div class="auth-foot muted">Já tem conta? <span class="link" onclick="openLogin()">Entrar</span></div></div></div></div>
-<div id="app" class="hidden"><aside class="sidebar"><div class="side-brand"><img src="logo.png"><div><div class="brand">JM</div><small class="muted">BARBEARIA</small></div></div><nav class="nav"><button class="active" data-sec="home" onclick="go('home',this)">⌂ <span>Início</span></button><button data-sec="appointments" onclick="go('appointments',this)">◷ <span>Agendamentos</span></button><button data-sec="club" onclick="go('club',this)">◇ <span>Clube Adriano Paulo</span></button><button data-sec="plans" onclick="go('plans',this)">▣ <span>Planos</span></button><button data-sec="profile" onclick="go('profile',this)">○ <span>Perfil</span></button></nav><button class="ghost logout" onclick="logout()">Sair</button></aside>
-<main class="main"><header class="topbar"><div><b id="hello">Olá</b><div class="muted">Sua experiência JM começa aqui.</div></div><div class="avatar" id="topAvatar">JM</div></header>
+<div id="authModal" class="modal hidden"><div class="auth"><button class="ghost" style="float:right;padding:7px 11px" onclick="closeAuth()">×</button><img class="logo" style="width:72px;height:72px" src="logo.png"><div id="loginBox"><h2>Bem-vindo à Adriano Paulo</h2><p class="muted">Entre para agendar seu próximo atendimento.</p><div class="grid"><div class="field"><label>E-mail ou usuário interno</label><input id="loginUser" type="text" placeholder="Cliente: e-mail | Equipe: usuário"></div><div class="field"><label>Senha</label><input id="loginPass" type="password" placeholder="••••••••"></div><button class="primary" onclick="login()">Entrar</button></div><div class="auth-foot muted">Ainda não possui conta? <span class="link" onclick="openRegister()">Cadastre-se</span></div></div>
+<div id="registerBox" class="hidden"><h2>Criar conta</h2><p class="muted">Preencha seus dados para continuar.</p><div class="grid"><div class="field"><label>Nome completo</label><input id="regName"></div><div class="field"><label>E-mail</label><input id="regEmail" type="email" autocomplete="email" placeholder="seuemail@exemplo.com"></div><div class="field"><label>Telefone</label><input id="regPhone" inputmode="tel"></div><div class="field"><label>Data de nascimento</label><input id="regBirth" type="date"></div><div class="field"><label>Como conheceu a barbearia?</label><select id="regSource"><option value="">Selecione</option><option>Cortesia</option><option>Eventos</option><option>Facebook</option><option>Fachada da loja</option><option>Google</option><option>Indicação</option><option>Instagram</option><option>Panfleto</option><option>Site</option></select></div><div class="field"><label>Crie uma senha</label><input id="regPass" type="password"></div><button class="primary" onclick="register()">Concluir cadastro</button></div><div class="auth-foot muted">Já tem conta? <span class="link" onclick="openLogin()">Entrar</span></div></div></div></div>
+<div id="app" class="hidden"><aside class="sidebar"><div class="side-brand"><img src="logo.png"><div><div class="brand">AP</div><small class="muted">BARBEARIA</small></div></div><nav class="nav"><button class="active" data-sec="home" onclick="go('home',this)">⌂ <span>Início</span></button><button data-sec="appointments" onclick="go('appointments',this)">◷ <span>Agendamentos</span></button><button data-sec="club" onclick="go('club',this)">◇ <span>Clube Adriano Paulo</span></button><button data-sec="plans" onclick="go('plans',this)">▣ <span>Planos</span></button><button data-sec="profile" onclick="go('profile',this)">○ <span>Perfil</span></button></nav><button class="ghost logout" onclick="logout()">Sair</button></aside>
+<main class="main"><header class="topbar"><div><b id="hello">Olá</b><div class="muted">Sua experiência Adriano Paulo começa aqui.</div></div><div class="avatar" id="topAvatar">AP</div></header>
 <section id="home" class="section active"><div class="hero"><span class="pill">ADRIANO PAULO</span><h1>Seu estilo.<br><span class="silver">Nossa assinatura.</span></h1><p class="muted">Escolha a filial, seu profissional e os serviços. O pagamento é realizado presencialmente na barbearia.</p><div class="quick"><button class="primary" onclick="go('club')">Conhecer Clube Adriano Paulo</button><button class="ghost" onclick="go('plans')">Conhecer Planos</button></div></div><div class="booking card"><h2>Agendar atendimento</h2><div class="step"><h3>1. Filial</h3><div class="choice-grid" id="branchChoices"></div></div><div class="step"><h3>2. Profissional</h3><div class="choice-grid" id="proChoices"><span class="muted">Selecione uma filial primeiro.</span></div></div><div class="step"><h3>3. Serviços</h3><div class="service-list" id="serviceChoices"></div></div><div class="step"><h3>4. Data</h3><div class="field" style="max-width:280px"><input id="datePick" type="date" onchange="renderSlots()"></div></div><div class="step"><h3>5. Horário</h3><div class="slots" id="slots"><span class="muted">Selecione filial, profissional, serviço e data.</span></div></div><div class="summary hidden" id="bookingSummary"><div><small class="muted">Total a pagar na barbearia</small><div class="price" id="total">R$ 0,00</div></div><button id="bookBtn" class="primary" disabled onclick="book()">Agendar</button></div></div></section>
 <section id="appointments" class="section"><h1 class="section-title">Agendamentos</h1><p class="muted">Próximos atendimentos e histórico completo.</p><div class="cards" style="grid-template-columns:1fr" id="appointmentList"></div></section>
 <section id="club" class="section"><h1 class="section-title">Clube Adriano Paulo</h1><p class="muted">Benefícios para quem faz da excelência uma rotina.</p><div class="cards"><div class="card"><h3>Como resgatar cupom</h3><p>Apresente seu cupom ativo no atendimento. O benefício é validado antes da finalização do serviço.</p></div><div class="card"><h3>Experiência Adriano Paulo</h3><p>Atendimento personalizado, profissionais especializados e cuidado em cada detalhe.</p></div><div class="card"><h3>Vantagens</h3><p>Planos recorrentes, benefícios em serviços extras e condições especiais.</p></div></div><h2>Profissionais</h2><div class="cards"><div class="card"><h3>Principal</h3><p>Mateus Silva • <b>Kauê Pedralva — destaque</b> • Helton • Junior Melo • Johnata</p></div><div class="card"><h3>Sem preferência</h3><p>Deixe a JM selecionar automaticamente um profissional disponível para você.</p></div><div class="card"><h3>Funcionamento</h3><p>Todos os dias • 08h às 20h</p></div></div><div class="gallery"><div>Ambiente Adriano Paulo</div><div>Experiência premium</div><div>Precisão e estilo</div></div></section>
@@ -166,20 +166,46 @@ const services=[
 ];
 let state={branch:'',pro:'',services:[],date:'',time:''};
 function users(){return JSON.parse(localStorage.getItem('mh_users')||'{}')}function saveUsers(x){localStorage.setItem('mh_users',JSON.stringify(x))}function current(){return localStorage.getItem('mh_current')||''}function openLogin(){authModal.classList.remove('hidden');loginBox.classList.remove('hidden');registerBox.classList.add('hidden')}function openRegister(){authModal.classList.remove('hidden');loginBox.classList.add('hidden');registerBox.classList.remove('hidden');if(loginUser.value)regEmail.value=loginUser.value}function closeAuth(){authModal.classList.add('hidden')}
-function register(){let name=regName.value.trim(),email=regEmail.value.trim().toLowerCase(),phone=regPhone.value.trim(),birth=regBirth.value,source=regSource.value,pass=regPass.value;if(!name||!email||!phone||!birth||!source||pass.length<6)return toast('Preencha todos os campos e use uma senha com 6+ caracteres.');let u=users();u[email]={name,email,phone,birth,source,pass,profile:{}};saveUsers(u);localStorage.setItem('mh_current',email);enterApp();closeAuth();toast('Cadastro concluído. Bem-vindo à JM!')}
+function register(){let name=regName.value.trim(),email=regEmail.value.trim().toLowerCase(),phone=regPhone.value.trim(),birth=regBirth.value,source=regSource.value,pass=regPass.value;if(!name||!email||!phone||!birth||!source||pass.length<6)return toast('Preencha todos os campos e use uma senha com 6+ caracteres.');let u=users();u[email]={name,email,phone,birth,source,pass,profile:{}};saveUsers(u);localStorage.setItem('mh_current',email);enterApp();closeAuth();toast('Cadastro concluído. Bem-vindo à Adriano Paulo!')}
 function login(){
- let email=loginUser.value.trim().toLowerCase(),pass=loginPass.value;
- if(email==='Adri@no8809'){
+ const rawLogin=loginUser.value.trim(), pass=loginPass.value;
+
+ // ADM e Recepção usam USUÁRIO, preservando maiúsculas/minúsculas.
+ if(rawLogin==='Adri@no8809'){
    if(pass!=='ADR5529')return toast('Senha administrativa inválida.');
-   localStorage.removeItem('mh_current');localStorage.removeItem('mh_reception');localStorage.setItem('mh_admin','1');closeAuth();enterAdmin();return;
+   localStorage.removeItem('mh_current');
+   localStorage.removeItem('mh_reception');
+   localStorage.setItem('mh_admin','1');
+   closeAuth();
+   enterAdmin();
+   return;
  }
- if(email==='Recp!88@1!'){
+
+ if(rawLogin==='Recp!88@1!'){
    if(pass!=='REC6638')return toast('Senha da recepção inválida.');
-   localStorage.removeItem('mh_current');localStorage.removeItem('mh_admin');localStorage.setItem('mh_reception','1');closeAuth();enterReception();return;
+   localStorage.removeItem('mh_current');
+   localStorage.removeItem('mh_admin');
+   localStorage.setItem('mh_reception','1');
+   closeAuth();
+   enterReception();
+   return;
  }
- let u=users();if(!u[email]){toast('E-mail não encontrado. Vamos criar seu cadastro.');setTimeout(openRegister,700);return}
+
+ // Cliente continua usando E-MAIL. Só o e-mail do cliente é normalizado.
+ const email=rawLogin.toLowerCase();
+ let u=users();
+ if(!u[email]){
+   toast('E-mail não encontrado. Vamos criar seu cadastro.');
+   setTimeout(openRegister,700);
+   return;
+ }
  if(u[email].pass!==pass)return toast('Senha inválida.');
- localStorage.removeItem('mh_admin');localStorage.removeItem('mh_reception');localStorage.setItem('mh_current',email);enterApp();closeAuth()
+
+ localStorage.removeItem('mh_admin');
+ localStorage.removeItem('mh_reception');
+ localStorage.setItem('mh_current',email);
+ enterApp();
+ closeAuth();
 }
 function logout(){localStorage.removeItem('mh_current');app.classList.add('hidden');landing.classList.remove('hidden');toast('Você saiu da sua conta.')}
 function enterApp(){let u=users()[current()];if(!u)return;landing.classList.add('hidden');app.classList.remove('hidden');hello.textContent='Olá, '+u.name.split(' ')[0];fillProfile();renderAppointments();renderSlots()}
