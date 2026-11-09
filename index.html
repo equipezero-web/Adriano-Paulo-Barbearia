@@ -713,8 +713,56 @@ function renderAdminAppointments(){
     <td>${esc(a.date.split('-').reverse().join('/'))}<br>${esc(a.time)}</td>
     <td>${(a.services||[]).map(x=>esc(x.n)).join('<br>')}</td><td>${money(a.total)}</td>
     <td class="${a.status==='Concluído'?'status-done':'status-pending'}">${esc(a.status)}</td>
-    <td>${a.status==='Concluído'?'<span class="pill">Concluído</span>':`<button class="primary" onclick="completeAppt('${esc(a.id)}')">Concluir</button>`}</td></tr>`;
+    <td><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      ${a.status==='Concluído'?'<span class="pill">Concluído</span>':`<button type="button" class="primary" onclick="completeAppt('${esc(a.id)}')">Concluir</button>`}
+      <button type="button" class="ghost" style="color:#ed7278;border-color:rgba(237,114,120,.5)" onclick="deleteAppt('${esc(a.id)}',this)" aria-label="Excluir agendamento de ${esc(name)}">Excluir</button>
+    </div></td></tr>`;
   }).join(''):'<tr><td colspan="6" class="muted">Nenhum agendamento.</td></tr>';
+}
+async function deleteAppt(id,button){
+  const item=appts().find(a=>String(a.id)===String(id));
+  if(!item){toast('Agendamento não encontrado. Atualize a lista.');return}
+  const date=String(item.date||'').split('-').reverse().join('/');
+  const services=(item.services||[]).map(x=>x.n).join(', ')||'Serviço';
+  const done=item.status==='Concluído';
+  const warning=done?' Essa exclusão também retira o atendimento do histórico e dos cálculos de faturamento.':'';
+  if(!window.confirm(`Excluir definitivamente o agendamento de ${date} às ${item.time} (${services})? O evento vinculado será removido do Google Agenda.${warning} Essa ação não pode ser desfeita.`))return;
+  if(button?.disabled)return;
+  if(button){button.disabled=true;button.textContent='Excluindo…';}
+  try{
+    if(CLOUD){
+      const {data:{session},error:sessionError}=await db.auth.getSession();
+      if(sessionError||!session?.access_token)throw Error('Sessão expirada. Entre novamente no ADM.');
+      const {data,error}=await db.functions.invoke('ap-delete-booking',{
+        body:{id:String(id)},headers:{Authorization:'Bearer '+session.access_token}
+      });
+      if(error){
+        let reason=error.message||'Erro ao excluir agendamento.';
+        if(error.context&&typeof error.context.json==='function'){
+          const details=await error.context.json().catch(()=>null);
+          reason=details?.error||reason;
+        }
+        throw Error(reason);
+      }
+      if(!data?.ok||String(data.id)!==String(id))throw Error(data?.error||'O servidor não confirmou a exclusão.');
+      cloudAppointments=cloudAppointments.filter(a=>String(a.id)!==String(id));
+      renderAdminAll();
+      renderReception();
+      if(!el('app').classList.contains('hidden'))renderAppointments();
+      toast(data.calendar_removed?'Agendamento excluído do sistema e do Google Agenda.':'Agendamento excluído do sistema.');
+      await loadCloudBookings().catch(()=>toast('Exclusão confirmada, mas não foi possível atualizar a lista do servidor agora.'));
+    }else{
+      // Exclusão na prévia demonstrativa, nunca em tabelas reais.
+      const remaining=appts().filter(a=>String(a.id)!==String(id));
+      localStorage.setItem('mh_appts',JSON.stringify(remaining));
+      renderAdminAll();renderReception();renderAppointments();
+      toast('Agendamento excluído da prévia local.');
+    }
+  }catch(e){
+    toast('Não foi possível excluir: '+(e?.message||'Tente novamente.'));
+  }finally{
+    if(button&&button.isConnected){button.disabled=false;button.textContent='Excluir';}
+  }
 }
 function renderDashboard(){
   const mk=dateRecife().slice(0,7),all=appts().filter(x=>x.status==='Concluído');
