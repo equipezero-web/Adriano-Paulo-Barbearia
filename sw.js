@@ -1,4 +1,4 @@
-const CACHE_NAME='adriano-v21-reset-booking-after-confirm-20261109';
+const CACHE_NAME='adriano-v22-admin-delete-bookings-20261109';
 const ASSETS=['./','./index.html','./manifest.json','./config.js','./icon-192.png','./icon-maskable-512.png'];
 self.addEventListener('install',e=>e.waitUntil(
   caches.open(CACHE_NAME)
