@@ -227,7 +227,7 @@ button:hover{filter:none!important}
 </style></head>
 <body>
 <section id="landing"><div class="landing-card"><img alt="Adriano Paulo Barbearia" class="logo" src="icon-maskable-512.png"/><h1>ADRIANO PAULO</h1><div class="smoke"><div id="smokeText">Precisão, estilo e cuidado em cada detalhe.</div></div><div class="landing-actions"><button class="primary" onclick="openLogin()">Entrar</button><button class="ghost" onclick="openRegister()">Criar conta</button></div><p class="muted">Agendamento • atendimento premium</p></div></section>
-<div class="modal hidden" id="authModal"><div class="auth"><button class="ghost" onclick="closeAuth()" style="float:right;padding:7px 11px">×</button><img class="logo" src="icon-maskable-512.png" style="width:72px;height:72px"/><div id="loginBox"><h2>Bem-vindo à Adriano Paulo</h2><p class="muted">Entre para agendar seu próximo atendimento.</p><div class="grid"><div class="field"><label>E-mail ou usuário interno</label><input id="loginUser" placeholder="Cliente: e-mail | Equipe: usuário" type="text"/></div><div class="field"><label>Senha</label><input id="loginPass" placeholder="••••••••" type="password"/></div><div id="apCaptchaLogin" class="ap-captcha-host" aria-label="Verificação de segurança do login"></div><button class="primary" onclick="login()">Entrar</button></div><div class="auth-foot muted">Ainda não possui conta? <span class="link" onclick="openRegister()">Cadastre-se</span></div></div>
+<div class="modal hidden" id="authModal"><div class="auth"><button class="ghost" onclick="closeAuth()" style="float:right;padding:7px 11px">×</button><img class="logo" src="icon-maskable-512.png" style="width:72px;height:72px"/><div id="loginBox"><h2>Bem-vindo à Adriano Paulo</h2><p class="muted">Entre para agendar seu próximo atendimento.</p><div class="grid"><div class="field"><label>E-mail ou usuário interno</label><input id="loginUser" placeholder="Cliente: e-mail | Equipe: usuário" type="text"/></div><div class="field"><label>Senha</label><input id="loginPass" placeholder="••••••••" type="password"/></div><div id="apCaptchaLogin" class="ap-captcha-host" aria-label="Verificação de segurança do login"></div><button class="primary" onclick="login()">Entrar</button></div><div id="apSignupNotice" class="hidden" role="status" style="margin-top:16px;padding:14px 16px;border:1px solid rgba(212,175,55,.36);background:rgba(212,175,55,.075);border-radius:16px;font-size:13px;line-height:1.6;color:var(--text,#f4efe6)">Se o e-mail for novo, enviaremos as instruções de confirmação. Verifique também o spam. Se já tiver uma conta, entre com sua senha ou recupere o acesso abaixo.</div><div class="auth-foot muted">Ainda não possui conta? <span class="link" onclick="openRegister()">Cadastre-se</span></div><div class="auth-foot muted"><span class="link" onclick="openPasswordResetFromLogin()">Esqueci minha senha</span></div></div>
 <div class="hidden" id="registerBox"><h2>Criar conta</h2><p class="muted">Preencha seus dados para continuar.</p><div class="grid"><div class="field"><label>Nome completo</label><input id="regName"/></div><div class="field"><label>E-mail</label><input autocomplete="email" id="regEmail" placeholder="seuemail@exemplo.com" type="email"/></div><div class="field"><label>Telefone</label><input id="regPhone" inputmode="tel"/></div><div class="field"><label>Data de nascimento</label><input id="regBirth" type="date"/></div><div class="field"><label>Como conheceu a barbearia?</label><select id="regSource"><option value="">Selecione</option><option>Fachada da loja</option><option>Google</option><option>Indicação</option><option>Instagram</option><option>Site</option></select></div><div class="field"><label>Crie uma senha</label><input id="regPass" type="password"/></div><div id="apCaptchaRegister" class="ap-captcha-host" aria-label="Verificação de segurança do cadastro"></div><button class="primary" onclick="register()">Concluir cadastro</button></div><div class="auth-foot muted">Já tem conta? <span class="link" onclick="openLogin()">Entrar</span></div></div></div></div>
 <div class="hidden" id="app"><aside class="sidebar"><div class="side-brand"><img src="icon-maskable-512.png"/><div><div class="brand">AP</div><small class="muted">BARBEARIA</small></div></div><nav class="nav"><button class="active" data-sec="home" onclick="go('home',this)">⌂ <span>Início</span></button><button data-sec="appointments" onclick="go('appointments',this)">◷ <span>Agendamentos</span></button><button data-sec="club" onclick="go('club',this)">◇ <span>Barbearia</span></button><button data-sec="plans" onclick="go('plans',this)">▣ <span>Planos</span></button><button data-sec="profile" onclick="go('profile',this)">○ <span>Perfil</span></button></nav><button class="ghost logout" onclick="logout()">Sair</button></aside>
 <main class="main"><header class="topbar"><div><b id="hello">Olá</b><div class="muted">Sua experiência Adriano Paulo começa aqui.</div></div><div class="avatar" id="topAvatar">AP</div></header>
@@ -785,7 +785,14 @@ async function adrianoRegister(){
   const {data,error}=await db.auth.signUp({email,password,options:{captchaToken,data:{app_id:'adriano_paulo',full_name:name,phone,birth,source},emailRedirectTo:location.origin+location.pathname}});
   apCaptchaReset('register');
   if(error){toast(error.message);return}
-  if(!data.session){closeAuth();toast('Confira seu e-mail e confirme o cadastro.');return}
+  if(!data.session){
+    // Supabase evita enumerar contas: um cadastro repetido pode retornar sucesso sem enviar e-mail.
+    // Mensagem neutra, sem afirmar que foi enviado um e-mail.
+    el('loginUser').value=email;
+    openLogin();
+    el('apSignupNotice').classList.remove('hidden');
+    return;
+  }
   await loadCloudUser(data.user);closeAuth();enterApp();
 }
 async function adrianoLogin(){
@@ -931,16 +938,32 @@ async function setPhoto(input){
 }
 function changePassword(){
   if(!CLOUD){toast('Redefinição por e-mail requer Supabase configurado.');return}
-  el('resetAccountEmail').value=current();updateStatus('resetMessage','');el('resetRequestModal').classList.remove('hidden');if(CLOUD)apCaptchaPrepare('reset').catch(apCaptchaError);
+  el('resetAccountEmail').value=cloudUser?.email||current()||'';
+  updateStatus('resetMessage','');
+  el('resetRequestModal').classList.remove('hidden');
+  apCaptchaPrepare('reset').catch(apCaptchaError);
+}
+function openPasswordResetFromLogin(){
+  if(!CLOUD){toast('Recuperação de senha indisponível.');return}
+  const typed=el('loginUser').value.trim();
+  el('resetAccountEmail').value=typed.includes('@')?typed:'';
+  closeAuth();
+  updateStatus('resetMessage','');
+  el('resetRequestModal').classList.remove('hidden');
+  apCaptchaPrepare('reset').catch(apCaptchaError);
 }
 function closeResetRequest(){el('resetRequestModal').classList.add('hidden')}
 async function sendPasswordReset(){
-  const email=current();if(!email||!CLOUD){toast('E-mail da conta indisponível.');return}
+  const email=el('resetAccountEmail').value.trim().toLowerCase();
+  if(!CLOUD||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    updateStatus('resetMessage','Digite um endereço de e-mail válido.');return;
+  }
   const captchaToken=apCaptchaGet('reset');if(captchaToken===null)return;
   const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:`${location.origin}${location.pathname}#password-recovery`,captchaToken});
   apCaptchaReset('reset');
   if(error){updateStatus('resetMessage',error.message);return}
-  closeResetRequest();toast('Enviamos um link de redefinição ao seu e-mail.');
+  closeResetRequest();
+  toast('Se este e-mail possuir uma conta, enviaremos instruções de recuperação.');
 }
 async function confirmNewPassword(){
   if(!CLOUD){toast('Conecte o backend.');return}
@@ -1080,7 +1103,7 @@ window.addEventListener('DOMContentLoaded',bootAdrianoApp);
 <div aria-label="Redefinir senha" aria-modal="true" class="modal hidden" id="resetRequestModal" role="dialog">
 <div class="auth"><button aria-label="Fechar" class="ghost close-modal" onclick="closeResetRequest()">×</button><h2>Redefinir senha</h2>
 <p class="muted">O link será enviado para o e-mail cadastrado em sua conta.</p>
-<div class="field"><label>E-mail cadastrado</label><input id="resetAccountEmail" readonly="" type="email"/></div>
+<div class="field"><label>E-mail cadastrado</label><input id="resetAccountEmail" type="email" autocomplete="email" placeholder="seuemail@exemplo.com"/></div>
 <div id="apCaptchaReset" class="ap-captcha-host" aria-label="Verificação de segurança para redefinir senha"></div><button class="primary" onclick="sendPasswordReset()">Enviar link de redefinição</button><p class="muted" id="resetMessage" role="status"></p></div></div>
 <div aria-label="Nova senha" aria-modal="true" class="modal hidden" id="newPasswordModal" role="dialog"><div class="auth">
 <h2>Definir nova senha</h2><p class="muted">Escolha uma nova senha de acesso ao site ou aplicativo.</p>
