@@ -224,6 +224,8 @@ button:hover{filter:none!important}
 .ap-captcha-host{min-height:58px;display:flex;align-items:center;max-width:100%;overflow:visible;}
 .ap-captcha-warning{font-size:12px;line-height:1.5;color:#ffcf78;padding:8px;border:1px solid #8a6217;border-radius:8px;}
 @media(max-width:360px){.ap-captcha-host{transform:scale(.88);transform-origin:top left;margin-bottom:-7px}}
+/* A agenda da barbearia é sincronizada no servidor, sem link manual para o cliente. */
+a[href*="calendar.google.com/calendar/render"]{display:none!important}
 </style></head>
 <body>
 <section id="landing"><div class="landing-card"><img alt="Adriano Paulo Barbearia" class="logo" src="icon-maskable-512.png"/><h1>ADRIANO PAULO</h1><div class="smoke"><div id="smokeText">Precisão, estilo e cuidado em cada detalhe.</div></div><div class="landing-actions"><button class="primary" onclick="openLogin()">Entrar</button><button class="ghost" onclick="openRegister()">Criar conta</button></div><p class="muted">Agendamento • atendimento premium</p></div></section>
@@ -1063,7 +1065,7 @@ async function syncCalendarNow(){
 async function bootAdrianoApp(){
   state.branch='Principal';state.pro=SOLO_BARBER;state.services=[];state.time='';
   el('datePick').min=dateRecife();renderServices();renderClientPlans();renderClientBarbershop();renderSlots();
-  if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
+  if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{}))}
   if(PREVIEW){
     const banner=document.createElement('div');banner.textContent='MODO DEMONSTRAÇÃO: os dados ficam somente neste navegador. Não publique esta versão.';
     banner.style.cssText='position:fixed;left:8px;right:8px;bottom:8px;z-index:100;background:#000;color:#D4AF37;border:1px solid #D4AF37;padding:7px 10px;text-align:center;border-radius:10px;font-size:12px;pointer-events:none';
