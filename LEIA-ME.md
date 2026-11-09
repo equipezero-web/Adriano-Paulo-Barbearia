@@ -1,28 +1,21 @@
-# Adriano Paulo Barbearia — pacote de correção (09/11/2026)
+# Adriano Paulo Barbearia — 2FA e Google Agenda
 
-## Incluído
+## Correção
 
-- `index.html`: mantém o CAPTCHA Turnstile já preparado, melhora as mensagens de erro do Google Agenda e acrescenta interações discretas, cantos arredondados, acessibilidade e efeitos suaves.
-- `config.js`: continua apontando para o projeto Supabase compartilhado da equipezero-web, com somente a chave pública. **Não inserir chaves secretas aqui.**
-- `sw.js`: atualiza a versão do cache PWA para que o celular receba os arquivos novos.
+O backend `ap-sync-calendar` foi mantido com JWT e 2FA obrigatórios.
+Esta atualização faz o botão Sincronizar agenda inspecionar o nível da sessão local (`aal1`/`aal2`). Se necessário, apresenta o diálogo do autenticador já cadastrado em vez de criar outro fator; depois de uma verificação `aal2` bem-sucedida, a sincronização solicitada é retomada. A requisição utiliza o token atualizado da sessão.
 
-## Backend já alterado
+Também reforça a confirmação de `aal2` antes de abrir o painel administrativo, preserva o papel administrativo no restauro da sessão, e dá uma orientação mais clara caso o backend ainda recuse o token.
 
-A função Edge Function `ap-sync-calendar` foi publicada como v3 no Supabase projeto `fqisewatypluagngmgka`, com CORS atualizado para as origens GitHub Pages conhecidas. Continua exigindo JWT válido, acesso ADM e 2FA. Não precisa enviar este código ao GitHub.
+## Publicação
 
-## Como publicar
+Substitua SOMENTE os arquivos `index.html`, `config.js` e `sw.js` na raiz do repositório `lucaalves018-ux/Adriano-Paulo-Barbearia`.
+A atualização mantém as melhorias de layout, o CAPTCHA e as integrações do pacote anterior.
 
-1. No GitHub `lucaalves018-ux/Adriano-Paulo-Barbearia`, substitua `index.html`, `config.js` e `sw.js` pelos arquivos com os mesmos nomes. Mantenha os demais arquivos e imagens.
-2. Aguarde a publicação do GitHub Pages, abra o site e recarregue sem cache (Ctrl+Shift+R).
-3. Entre no painel ADM com a conta existente. Conclua a autenticação em dois fatores.
-4. Clique em **Sincronizar agenda** e leia a mensagem que aparecer.
+Após a publicação, abra o site atualizado, saia e faça login com e-mail/senha. Informe os 6 dígitos do autenticador solicitado **no site da barbearia**. Depois use Sincronizar agenda.
 
-## Se aparecer "Configure o Google Agenda antes de sincronizar"
+## Segurança
 
-No projeto Supabase compartilhado (Edge Functions > Secrets), precisam existir **ambos**: `AP_GOOGLE_CALENDAR_ID` e `AP_GOOGLE_SERVICE_ACCOUNT_JSON`. A conta de serviço Google precisa ter acesso ao calendário, e a Google Calendar API precisa estar habilitada no projeto Google Cloud. Configure os valores apenas como secrets do servidor; **não cole a chave privada no GitHub nem nesta conversa**.
-
-## Notas
-
-- As tabelas `ap_*` da barbearia não foram alteradas. A L&A não foi modificada.
-- O banco da barbearia estava com **0 agendamentos** na última consulta; depois de configurar tudo, "0 sincronizados" é um resultado esperado até haver reservas.
-- A mudança de código foi testada sintaticamente, mas login Google real e CORS do navegador precisam ser testados com sua sessão.
+Nunca compartilhe senhas, token, chave privada do Google, QR code de autenticação ou `service_role`.
+A barbearia e a L&A compartilham o projeto Supabase, mas sessões em origens GitHub Pages diferentes não são automaticamente compartilhadas no navegador. Confirmar MFA em uma origem não necessariamente confirma a sessão da outra.
+O código foi verificado quanto à sintaxe JavaScript, mas a sincronização real deve ser testada com a sessão do usuário e as credenciais Google configuradas.

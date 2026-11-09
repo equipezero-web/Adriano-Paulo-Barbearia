@@ -433,7 +433,7 @@ function apCaptchaReset(which){
 const AP_GOLD='#D4AF37';
 const BUSINESS_TZ='America/Recife';
 let db=null, cloudUser=null, cloudRole='client', cloudAppointments=[], cloudPlans=[], cloudShopInfo=null, cloudShopPhotos=[], cloudProfiles={}, cloudReviews=[];
-let pendingRole='client', mfaFlow='', mfaFactorId='', mfaRequired=false;
+let pendingRole='client', mfaFlow='', mfaFactorId='', mfaRequired=false, apCalendarAfterMfa=false;
 let apSyncTimer=null;
 const previewStaff={
   'demo_adm':{password:'demo1234',role:'admin'},
@@ -826,13 +826,23 @@ async function adrianoLogin(){
       mfaRequired=true;await challengeMFA();return;
     }
     if(pendingRole!=='client' && aal.currentLevel!=='aal2'){
-      mfaRequired=true;await activateMFA();return;
+      mfaRequired=true;await challengeMFA();return;
     }
     await finishCloudLogin();
   }catch(e){toast('Não foi possível entrar: '+(e.message||'Verifique os dados'));}
   finally{apCaptchaReset('login');}
 }
 async function finishCloudLogin(){
+  if(pendingRole!=='client'){
+    const {data:aal,error}=await db.auth.mfa.getAuthenticatorAssuranceLevel();
+    if(error){toast('Não foi possível verificar o 2FA: '+error.message);return}
+    if(aal?.currentLevel!=='aal2'){
+      mfaRequired=true;
+      toast('Confirme os 6 dígitos do autenticador para acessar o painel.');
+      await challengeMFA();
+      return;
+    }
+  }
   await loadCloudData();
   closeAuth();closeMfaModal(true);
   if(pendingRole==='admin')enterAdmin();else if(pendingRole==='reception')enterReception();else enterApp();
@@ -962,12 +972,19 @@ async function challengeMFA(){
   updateStatus('mfaMessage','');el('mfaModal').classList.remove('hidden');
 }
 async function confirmMfa(){
-  const code=el('mfaCode').value.trim();if(!/^\d{6}$/.test(code)){updateStatus('mfaMessage','Digite os 6 dígitos do autenticador.');return}
+  const code=el('mfaCode').value.trim();
+  if(!/^\d{6}$/.test(code)){updateStatus('mfaMessage','Digite os 6 dígitos do autenticador.');return}
   const {error}=await db.auth.mfa.challengeAndVerify({factorId:mfaFactorId,code});
   if(error){updateStatus('mfaMessage',error.message);return}
+  const {data:aal,error:aalError}=await db.auth.mfa.getAuthenticatorAssuranceLevel();
+  if(aalError||aal?.currentLevel!=='aal2'){
+    updateStatus('mfaMessage','Código recebido, mas a sessão ainda não chegou ao nível 2. Saia, entre novamente e confirme o autenticador.');
+    return;
+  }
   el('mfaCode').value='';closeMfaModal(true);
-  toast('Autenticação em dois fatores validada.');
+  toast('Autenticação em dois fatores validada nesta sessão.');
   if(mfaRequired){mfaRequired=false;await finishCloudLogin()}
+  if(apCalendarAfterMfa){apCalendarAfterMfa=false;await syncCalendarNow()}
 }
 function closeMfaModal(force=false){
   if(mfaRequired&&!force){toast('Conclua o 2FA para acessar esta área.');return}
@@ -978,18 +995,35 @@ function showCalendarStatus(){
 }
 async function syncCalendarNow(){
  if(!CLOUD){toast('Google Agenda exige configuração do backend.');return}
+ try{
+   const {data:aal,error:aalError}=await db.auth.mfa.getAuthenticatorAssuranceLevel();
+   if(aalError)throw aalError;
+   if(aal?.currentLevel!=='aal2'){
+     apCalendarAfterMfa=true;
+     toast('Para sincronizar, confirme o código de 6 dígitos no autenticador.');
+     await challengeMFA();
+     return;
+   }
+ }catch(e){toast('Não foi possível verificar o 2FA: '+(e.message||'Entre novamente.'));return}
  const btn=document.querySelector('#admDash button[onclick="syncCalendarNow()"]');
  if(btn?.disabled)return;
  const oldText=btn?.textContent;
  if(btn){btn.disabled=true;btn.textContent='Sincronizando agenda…';btn.setAttribute('aria-busy','true')}
  try{
-  const {data,error}=await db.functions.invoke('ap-sync-calendar',{body:{}});
+  const {data:{session},error:sessionError}=await db.auth.getSession();
+  if(sessionError||!session?.access_token)throw Error('Sessão expirada. Entre novamente no painel.');
+  const {data,error}=await db.functions.invoke('ap-sync-calendar',{
+    body:{},headers:{Authorization:'Bearer '+session.access_token}
+  });
   if(error){
    let detail=error.message||'Erro desconhecido';
    // Respostas HTTP (401/403/412/500) podem conter o motivo real no JSON.
    if(error.context && typeof error.context.json==='function'){
     const body=await error.context.json().catch(()=>null);
     detail=body?.error||body?.message||detail;
+   }
+   if(/2FA obrigat[oó]rio/i.test(detail)){
+    detail='Esta sessão ainda não foi reconhecida com 2FA no servidor. Saia e entre novamente no site da barbearia, validando o código do autenticador.';
    }
    if(/Failed to send a request/i.test(detail)){
     detail='Não foi possível contatar a função de sincronização. Confira sua conexão e atualize a página.';
@@ -1021,17 +1055,19 @@ async function bootAdrianoApp(){
   db=window.supabase.createClient(AP_CFG.supabaseUrl,AP_CFG.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   db.auth.onAuthStateChange((event,session)=>{
     if(event==='PASSWORD_RECOVERY')queueMicrotask(()=>{el('newPasswordModal').classList.remove('hidden');updateStatus('newPasswordMessage','')});
-    if(event==='SIGNED_OUT'){cloudUser=null;cloudRole='client';clearInterval(apSyncTimer);hideAllApps();el('landing').classList.remove('hidden')}
+    if(event==='SIGNED_OUT'){apCalendarAfterMfa=false;cloudUser=null;cloudRole='client';clearInterval(apSyncTimer);hideAllApps();el('landing').classList.remove('hidden')}
   });
   try{
     const {data:{session}}=await db.auth.getSession();
     if(session?.user){
       await loadCloudUser(session.user);
-      const {data:aal}=await db.auth.mfa.getAuthenticatorAssuranceLevel();
-      if(aal?.currentLevel==='aal1'&&aal?.nextLevel==='aal2'){mfaRequired=true;await challengeMFA();return}
-      const {data:staff}=await db.from('ap_staff_accounts').select('role').eq('user_id',session.user.id).maybeSingle();
+      const {data:staff,error:staffError}=await db.from('ap_staff_accounts').select('role').eq('user_id',session.user.id).maybeSingle();
+      if(staffError)throw staffError;
       pendingRole=staff?.role||'client';
-      if(pendingRole!=='client'&&aal?.currentLevel!=='aal2'){mfaRequired=true;await activateMFA();return}
+      const {data:aal,error:aalError}=await db.auth.mfa.getAuthenticatorAssuranceLevel();
+      if(aalError)throw aalError;
+      if(aal?.currentLevel==='aal1'&&aal?.nextLevel==='aal2'){mfaRequired=true;await challengeMFA();return}
+      if(pendingRole!=='client'&&aal?.currentLevel!=='aal2'){mfaRequired=true;await challengeMFA();return}
       await finishCloudLogin();
     }else{
       await Promise.all([loadCloudPlans(),loadCloudShop()]);
