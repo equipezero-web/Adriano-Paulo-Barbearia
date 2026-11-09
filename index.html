@@ -562,6 +562,18 @@ async function renderSlots(){
   renderAvailableSlots();
 }
 
+function resetBookingForm(){
+  // Limpa apenas a escolha feita no formulário; o agendamento confirmado permanece salvo.
+  state.branch='Principal';state.pro=SOLO_BARBER;
+  state.services=[];state.date='';state.time='';
+  apBlockedDay='';apBlockedIntervals=[];
+  el('datePick').value='';
+  renderServices(); // Reconstrói os serviços sem nenhum botão selecionado.
+  el('total').textContent=money(0);
+  el('durationTotal').textContent='Duração estimada';
+  updateStatus('scheduleNotice','');
+  renderSlots(); // Cancela consultas anteriores e oculta horários, resumo e confirmação.
+}
 async function book(){
   const button=el('bookBtn');if(button.disabled)return;
   const duration=durationOf(state.services);
@@ -575,15 +587,25 @@ async function book(){
     try{
       const {data,error}=await db.functions.invoke('ap-create-booking',{body:{date:state.date,time:state.time,services:state.services.map(x=>x.id)}});
       if(error)throw error;
-      if(data?.error)throw Error(data.error);
-      await loadCloudBookings();
-      toast('Agendamento confirmado!');
-    }catch(e){toast(`Não foi possível agendar: ${e.message||'Verifique a disponibilidade'}`);await loadCloudBookings().catch(()=>{});renderSlots();return}
+      if(!data?.ok||!data?.id)throw Error(data?.error||'O servidor não confirmou a reserva.');
+    }catch(e){
+      toast(`Não foi possível agendar: ${e.message||'Verifique a disponibilidade'}`);
+      await loadCloudBookings().catch(()=>{});
+      renderSlots();
+      return;
+    }
+    // A reserva já está salva: não manter o formulário preenchido, mesmo se o histórico falhar ao atualizar.
+    resetBookingForm();
+    toast('Agendamento confirmado!');
+    await loadCloudBookings().catch(()=>toast('Reserva confirmada, mas não foi possível atualizar o histórico agora.'));
   }else{
-    const list=appts();if(isTaken(appointment.date,minutes(appointment.time),duration)){toast('Horário acabou de ser reservado.');renderSlots();return}
-    list.push(appointment);localStorage.setItem('mh_appts',JSON.stringify(list));toast('Agendamento realizado na prévia local.');
+    const list=appts();
+    if(isTaken(appointment.date,minutes(appointment.time),duration)){toast('Horário acabou de ser reservado.');renderSlots();return}
+    list.push(appointment);localStorage.setItem('mh_appts',JSON.stringify(list));
+    resetBookingForm();
+    toast('Agendamento realizado na prévia local.');
+    renderAppointments();
   }
-  state.time='';renderSlots();renderAppointments();
 }
 function renderAppointments(){
   const list=appts().filter(x=>x.email===current()).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
