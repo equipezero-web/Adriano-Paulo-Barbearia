@@ -1054,7 +1054,13 @@ async function syncCalendarNow(){
    throw Error(detail);
   }
   if(!data?.ok)throw Error(data?.error||'A função não confirmou a sincronização.');
-  toast(`Google Agenda: ${Number(data.synced)||0} sincronizados, ${Number(data.failed)||0} com falha.`);
+  const synced=Number(data.synced)||0,failed=Number(data.failed)||0;
+  if(failed){
+    const reason=typeof data.firstError==='string'?data.firstError:'Confira o Google Agenda e os registros do Supabase.';
+    toast(`Google Agenda: ${synced} sincronizados, ${failed} com falha. ${reason}`);
+  }else{
+    toast(`Google Agenda: ${synced} sincronizados, sem falhas.`);
+  }
  }catch(e){
   toast('Google Agenda: '+(e?.message||'Erro de sincronização.'));
  }finally{
