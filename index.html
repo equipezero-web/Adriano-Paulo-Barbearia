@@ -583,20 +583,12 @@ async function book(){
   }
   state.time='';renderSlots();renderAppointments();
 }
-function calendarLink(a){
-  const isoDate=a.date.replaceAll('-','');const start=a.time.replace(':','')+'00';
-  const endDate=new Date(`${a.date}T${a.time}:00-03:00`);endDate.setMinutes(endDate.getMinutes()+(a.duration||durationOf(a.services)));
-  const endDay=dateRecife(endDate).replaceAll('-','');
-  const endHH=timeRecife(endDate).replace(':','')+'00';
-  const params=new URLSearchParams({action:'TEMPLATE',text:'Adriano Paulo Barbearia - '+(a.services||[]).map(s=>s.n).join(' + '),dates:`${isoDate}T${start}/${endDay}T${endHH}`,ctz:BUSINESS_TZ,details:'Atendimento agendado na Adriano Paulo Barbearia.'});
-  return 'https://calendar.google.com/calendar/render?'+params.toString();
-}
 function renderAppointments(){
   const list=appts().filter(x=>x.email===current()).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
   const pending=list.filter(x=>x.status!=='Concluído'&&x.status!=='Cancelado'),done=list.filter(x=>x.status==='Concluído');
   const card=a=>`<article class="card appt"><div><span class="pill">${esc(a.status)}</span><h3>${esc(a.date.split('-').reverse().join('/'))} • ${esc(a.time)}</h3>
 <div class="muted">${(a.services||[]).map(s=>esc(s.n)).join(' • ')}</div><small class="muted">Duração: ${a.duration||durationOf(a.services)} minutos • Pagamento presencial</small>
-<div style="margin-top:8px"><a class="ghost" href="${esc(calendarLink(a))}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:8px 12px;border-radius:12px">Adicionar ao Google Agenda</a></div></div>
+</div>
 <b>${money(a.total)}</b></article>`;
   el('appointmentList').innerHTML=`<h2>Próximos / Pendentes</h2>${pending.length?pending.map(card).join(''):'<div class="card muted">Nenhum agendamento pendente.</div>'}
   <h2 style="margin-top:24px">Histórico concluído</h2>${done.length?done.map(card).join(''):'<div class="card muted">Nenhum atendimento concluído.</div>'}`;
