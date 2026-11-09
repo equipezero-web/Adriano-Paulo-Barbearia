@@ -120,6 +120,56 @@ hr,.divider{border-color:rgba(31,77,121,.36)!important}
 ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track{background:#030507}::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#103454,#B88A20);border-radius:999px;border:2px solid #030507}
 ::selection{background:rgba(212,175,55,.34);color:#fff}
 
+
+/* ADRIANO PAULO — acabamento refinado e interação discreta (v15) */
+:root {--ap-corner:17px;--ap-card-corner:22px;--ap-motion:cubic-bezier(.22,1,.36,1)}
+button,.choice,.nav button,a.ghost,.filter-btn,.tab {touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button:not(.toggle):not(.complete-btn),a.ghost,.choice,.nav button {
+  border-radius:var(--ap-corner);
+  transition:background-color .2s ease,border-color .2s ease,color .2s ease,
+             box-shadow .22s ease,transform .22s var(--ap-motion),filter .2s ease;
+}
+.primary,.ghost,button.primary,button.ghost,.nav button,.choice {
+  border-radius:var(--ap-corner) !important;
+}
+.primary,.ghost,button.primary,button.ghost {min-height:42px}
+.card,.service-card,.stat-card,.metric-card,.booking-card,.profile-card,.plan-card,
+.appointment-card,.ranking-card,.chart-card,.panel,.box,.table-wrap {
+  border-radius:var(--ap-card-corner) !important;
+  transition:border-color .25s ease,box-shadow .25s ease;
+}
+.auth,.login-card,.admin-card,.reception-card,.client-card,.modal-content {
+  border-radius:24px !important;
+}
+.choice {border:1px solid rgba(212,175,55,.2);background:linear-gradient(155deg,#0c1925,#070c11)}
+.choice.selected {border-color:rgba(212,175,55,.82) !important;background:linear-gradient(155deg,rgba(212,175,55,.14),#081522) !important;box-shadow:inset 0 0 0 1px rgba(212,175,55,.12) !important}
+.summary,.step,.quick,.landing-actions {border-radius:20px}
+.summary {box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.switch:has(button) {border-radius:16px;padding-left:12px;padding-right:12px;transition:background .2s ease}
+:where(.card,.panel,.auth):focus-within {border-color:rgba(212,175,55,.48) !important}
+:where(button,a,.choice,input,select,textarea):focus-visible {
+  outline:2px solid var(--gold) !important;outline-offset:3px;
+}
+button:disabled {cursor:not-allowed;opacity:.58;transform:none !important}
+@media (hover:hover) {
+  button:not(:disabled):not(.toggle):not(.complete-btn):hover,a.ghost:hover,.choice:hover {
+    transform:translateY(-1px);
+    box-shadow:0 7px 18px rgba(0,0,0,.22),0 1px 0 rgba(244,220,138,.09);
+  }
+  button.primary:not(:disabled):hover {box-shadow:0 8px 22px rgba(212,175,55,.21) !important}
+  .card:has(button):hover,.panel:has(button):hover {border-color:rgba(212,175,55,.4) !important;box-shadow:0 16px 35px rgba(0,0,0,.26),inset 0 1px 0 rgba(212,175,55,.07) !important}
+  .switch:has(button):hover {background:rgba(212,175,55,.04)}
+}
+button:not(:disabled):not(.toggle):not(.complete-btn):active,.choice:active {transform:scale(.985)}
+@media (max-width:560px) {
+  :root {--ap-corner:15px;--ap-card-corner:19px}
+  .card,.panel {box-shadow:0 10px 24px rgba(0,0,0,.22) !important}
+  .switch:has(button) {padding-left:8px;padding-right:8px}
+}
+@media (prefers-reduced-motion:reduce) {
+  button,.choice,.card,.panel,.switch,a.ghost {transition:none !important;animation:none !important}
+}
+
 </style>
 <link href="manifest.json" rel="manifest"/>
 <link href="icon-maskable-512.png" rel="icon" type="image/png"/>
@@ -924,13 +974,35 @@ function closeMfaModal(force=false){
   el('mfaModal').classList.add('hidden');
 }
 function showCalendarStatus(){
-  toast(CLOUD?'Agendamentos sincronizam com a agenda da barbearia quando a função Google Calendar estiver configurada.':'Conecte o Supabase e a conta Google do estabelecimento para sincronizar.');
+  toast(CLOUD?'Sincronização protegida pelo Supabase: requer 2FA e credenciais Google configuradas.':'Conecte o Supabase e a conta Google do estabelecimento para sincronizar.');
 }
 async function syncCalendarNow(){
  if(!CLOUD){toast('Google Agenda exige configuração do backend.');return}
- try{const {data,error}=await db.functions.invoke('ap-sync-calendar',{body:{}});if(error)throw error;
- toast(`Google Agenda: ${data.synced||0} sincronizados, ${data.failed||0} pendentes.`)}
- catch(e){toast('Falha na integração Google Agenda: '+(e.message||'Verifique as credenciais'))}
+ const btn=document.querySelector('#admDash button[onclick="syncCalendarNow()"]');
+ if(btn?.disabled)return;
+ const oldText=btn?.textContent;
+ if(btn){btn.disabled=true;btn.textContent='Sincronizando agenda…';btn.setAttribute('aria-busy','true')}
+ try{
+  const {data,error}=await db.functions.invoke('ap-sync-calendar',{body:{}});
+  if(error){
+   let detail=error.message||'Erro desconhecido';
+   // Respostas HTTP (401/403/412/500) podem conter o motivo real no JSON.
+   if(error.context && typeof error.context.json==='function'){
+    const body=await error.context.json().catch(()=>null);
+    detail=body?.error||body?.message||detail;
+   }
+   if(/Failed to send a request/i.test(detail)){
+    detail='Não foi possível contatar a função de sincronização. Confira sua conexão e atualize a página.';
+   }
+   throw Error(detail);
+  }
+  if(!data?.ok)throw Error(data?.error||'A função não confirmou a sincronização.');
+  toast(`Google Agenda: ${Number(data.synced)||0} sincronizados, ${Number(data.failed)||0} com falha.`);
+ }catch(e){
+  toast('Google Agenda: '+(e?.message||'Erro de sincronização.'));
+ }finally{
+  if(btn){btn.disabled=false;btn.textContent=oldText;btn.removeAttribute('aria-busy')}
+ }
 }
 
 async function bootAdrianoApp(){
